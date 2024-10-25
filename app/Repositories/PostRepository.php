@@ -26,10 +26,10 @@ class PostRepository extends AbstractRepository
      *
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function allPosts() 
-    {
-        return $this->model->orderBy('id', 'desc')->paginate(12);
-    }
+//    public function allPosts()
+//    {
+//        return $this->model->orderBy('id', 'desc')->paginate(12);
+//    }
 
     /**
      * Get posts by a specific user, paginated.
@@ -37,9 +37,9 @@ class PostRepository extends AbstractRepository
      * @param int $user_id
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function ownPosts(int $user_id) 
-    {
-        return $this->model->where('user_id', $user_id)->orderBy('id', 'desc')->paginate(12);
-    }
+//    public function ownPosts(int $user_id)
+//    {
+//        return $this->model->where('user_id', $user_id)->orderBy('id', 'desc')->paginate(12);
+//    }
 
 }

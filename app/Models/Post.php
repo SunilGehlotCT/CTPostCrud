@@ -27,6 +27,18 @@ class Post extends Model
 		'user_id', 'title', 'slug', 'content', 'image'
 	];
 
+    protected ?array $sortables = [
+        'created_at', 'updated_at'
+    ];
+
+    protected ?array  $filterables = [
+        'user_id'
+    ];
+
+    protected ?array  $searchables = [
+        'title'
+    ];
+
     /**
      * The attributes that should be hidden for serialization.
      *

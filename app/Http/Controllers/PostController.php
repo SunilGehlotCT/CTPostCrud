@@ -14,7 +14,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Gate;
 
@@ -37,13 +37,13 @@ class PostController extends Controller
     public string $viewCreate = 'posts.create';
     public string $viewEdit = 'posts.edit';
     public string $viewShow = 'posts.show';
-    
+
 	public ?string $resourceClass = PostResource::class;
 
 	public ?string $collectionClass = PostCollection::class;
- 
+
 	public ?string $policyClass = PostPolicy::class;
- 
+
 	public string $requestClass = PostRequest::class;
 
 
@@ -62,7 +62,14 @@ class PostController extends Controller
      */
     public function home(): View
     {
-        $posts = $this->repository->allPosts();
+        $search = $this->request->input('search', '');
+        $criteria = [
+            'order' => 'created_at',
+            'direction' => 'desc',
+            'search'    => $search
+        ];
+
+        $posts = $this->repository->paginate(12, $criteria);
         return view($this->viewHome, compact('posts'));
     }
 
@@ -73,16 +80,13 @@ class PostController extends Controller
     {
         $user = Auth::user();
 
-        // $criteria = [
-        //     'orderBy' => 'created_at desc',
-        //     'direction' => 'desc',
-        //     'user_id' => $user->id, // Filtering by user ID
-        // ];
+         $criteria = [
+             'order' => 'created_at',
+             'direction' => 'desc',
+             'user_id' => $user->id, // Filtering by user ID
+         ];
 
-        // // dd($criteria);
-        // $posts = $this->repository->paginate(12, $criteria);
-
-        $posts = $this->repository->ownPosts($user->id);
+         $posts = $this->repository->paginate(12, $criteria);
 
         return view($this->viewIndex, compact('posts'));
     }
@@ -152,7 +156,7 @@ class PostController extends Controller
         // Gate::authorize('allow', $post);
 
         $comments = $post->comments()->orderBy('id', 'desc')->paginate(5);
-        
+
         return view($this->viewShow, compact('post', 'comments'));
     }
 
@@ -206,7 +210,7 @@ class PostController extends Controller
                 $thumbImg   = $thumb . $filename;
 
                 @$this->resize_crop_image(400, 300, $pathImg, $thumbImg);
-                
+
                 $data['image'] = $filename;
 
             }
@@ -214,7 +218,7 @@ class PostController extends Controller
             $post->update($data);
 
             Session::flash('flash_message_success', 'Post updated successfully.');
-            
+
         } else {
             Session::flash('flash_message_error', 'Oops, something went wrong!');
         }
@@ -238,35 +242,6 @@ class PostController extends Controller
         Session::flash('flash_message_success', 'Post deleted successfully.');
 
         return redirect()->route($this->routeIndex);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function addComment($id): JsonResponse|RedirectResponse
-    {
-
-        $request    = $this->request;
-        $data       = $request->input();
-
-        $post = $this->repository->findOrFail($id);
-
-        if ($post) {
-
-            $user = Auth::user();
-            $data['user_id'] = $user->id;
-
-            $post->comments()->create($data);
-
-            Session::flash('flash_message_success', 'Comment added successfully.');
-            return redirect()->route($this->viewShow, $post->id);
-            
-        }
-    
-        Session::flash('flash_message_error', 'Oops, something went wrong!');
-
-        return redirect()->route($this->viewHome);
-
     }
 
     private function resize_crop_image($max_width, $max_height, $source_file, $dst_dir, $quality = 80): bool

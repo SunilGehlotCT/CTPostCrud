@@ -6,7 +6,16 @@
     <div class="row">
         <h1>All Posts</h1>
     </div>
-    
+
+    <div class="row mb-4">
+        <div class="col-md-4 col-sm-6">
+            <form action="{{ route('home') }}" method="GET" class="d-flex">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search posts" class="form-control me-2">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
+    </div>
+
     <div class="row">
         @foreach($posts as $post)
         <div class="col-md-4 col-sm-6 mb-4">
