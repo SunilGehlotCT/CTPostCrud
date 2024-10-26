@@ -4,7 +4,7 @@
 <div class="container">
     <div class="row mb-3">
         <div class="col-md-4">
-            <img src="{{ asset('uploads/posts/thumb/'.$post->image) }}" class="img-fluid " alt="{{ $post->title }}" />
+            <img src="{{ $post->image }}" class="img-fluid " alt="{{ $post->title }}" />
         </div>
         <div class="col-md-8">
             <h1>{{ $post->title }}</h1>
@@ -14,7 +14,7 @@
     </div>
 
     <hr>
-    
+
     <div class="row">
         <div class="col-md-4">
             <h4>Add a Comment</h4>
@@ -34,7 +34,7 @@
         <div class="col-md-8">
             <h4>Comments ({{$post->comments()->count()}})</h4>
             @empty(!$comments)
-            
+
                 @foreach($comments as $comment)
                     <div class="card mb-3">
                         <div class="card-body">
@@ -56,15 +56,15 @@
                         </div>
                     </div>
                 @endforeach
-        
+
                 <div class="d-flex justify-content-center">
                     {{ $comments->links('vendor.pagination.bootstrap-5') }}
                 </div>
-        
+
             @endempty
         </div>
     </div>
-    
+
 </div>
 
 <script>

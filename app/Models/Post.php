@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Shamaseen\Repository\Utility\Model as Model;
 
 use Spatie\Sluggable\HasSlug;
@@ -38,6 +39,12 @@ class Post extends Model
     protected ?array  $searchables = [
         'title'
     ];
+
+    protected function image(): Attribute {
+        return Attribute::make(get: function($value){
+            return $value ? asset('storage/posts/'.$value) : 'fallback-post.jpg';
+        });
+    }
 
     /**
      * The attributes that should be hidden for serialization.

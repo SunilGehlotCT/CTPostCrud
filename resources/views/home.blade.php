@@ -20,7 +20,7 @@
         @foreach($posts as $post)
         <div class="col-md-4 col-sm-6 mb-4">
             <div class="card">
-                <img src="{{ asset('uploads/posts/thumb/'.$post->image) }}" class="card-img-top" alt="{{ $post->title }}">
+                <img src="{{ $post->image }}" class="card-img-top" alt="{{ $post->title }}">
                 <div class="card-body">
                     <h5 class="card-title">{{ $post->title }}</h5>
                     <p class="card-text">{{ \Illuminate\Support\Str::limit($post->content, 100) }}</p>

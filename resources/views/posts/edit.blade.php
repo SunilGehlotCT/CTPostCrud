@@ -39,10 +39,10 @@
                         </span>
                     @enderror
                 </div>
-            </div> 
+            </div>
             <div class="col-md-6">
                 @if( !empty($post->image) )
-                    <img src="{{ asset('uploads/posts/thumb/'.$post->image) }}" class="img-fluid" alt="{{ $post->title }}">
+                    <img src="{{ $post->image }}" class="img-fluid" alt="{{ $post->title }}">
                 @endif
             </div>
         </div>

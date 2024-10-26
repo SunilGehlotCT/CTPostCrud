@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 use Shamaseen\Repository\Utility\Controller as Controller;
 use Illuminate\Http\Request;
 use App\Http\Requests\PostRequest;
@@ -113,24 +116,16 @@ class PostController extends Controller
 
         $post = $this->repository->create($data);
         if ($post) {
-            $time = time();
-            $imgPath    = 'uploads/posts/';
-            $thumbPath  = 'uploads/posts/thumb/';
+
+            $filename   = $post->id.'-'.uniqid() . '.jpg';
 
             if ( $request->hasFile('image') ) {
 
-                $path       = public_path($imgPath);
-                $thumb      = public_path($thumbPath);
+                $manager =  new ImageManager(new Driver());
+                $image = $manager->read($request->file('image'));
+                $imgData = $image->cover(400, 300)->toJpeg(); // ->save()
 
-                $image      = $request->file('image');
-                $filename   = time(). '.' . $image->getClientOriginalExtension();
-
-                $image->move($path, $filename);
-
-                $pathImg    = $path . $filename;
-                $thumbImg   = $thumb . $filename;
-
-                @$this->resize_crop_image(400, 300, $pathImg, $thumbImg);
+                Storage::put('public/posts/' . $filename, $imgData);
 
                 $this->repository->update($post->id, ['image' => $filename]);
 
@@ -182,34 +177,24 @@ class PostController extends Controller
         $data       = $request->input();
 
         $post = $this->repository->findOrFail($id);
+        $filename = $post->getRawOriginal('image');
 
         Gate::authorize('allow', $post);
 
         if ($post) {
-            $time = time();
-            $imgPath    = 'uploads/posts/';
-            $thumbPath  = 'uploads/posts/thumb/';
 
             if ( $request->hasFile('image') ) {
 
-                $path       = public_path($imgPath);
-                $thumb      = public_path($thumbPath);
-
-                // If the post already has an image, unlink (delete) the old one
-                if ($post->image && file_exists(public_path($imgPath . $post->image))) {
-                    unlink($path . $post->image); // Unlink original image
-                    unlink($thumb . $post->image); // Unlink thumbnail image
+                // Remove the existing image file if it exists
+                if ($filename && Storage::exists('public/posts/' . $filename)) {
+                    Storage::delete('public/posts/' . $filename);
                 }
 
-                $image      = $request->file('image');
-                $filename   = time(). '.' . $image->getClientOriginalExtension();
+                $manager =  new ImageManager(new Driver());
+                $image = $manager->read($request->file('image'));
+                $imgData = $image->cover(400, 300)->toJpeg(); // ->save()
 
-                $image->move($path, $filename);
-
-                $pathImg    = $path . $filename;
-                $thumbImg   = $thumb . $filename;
-
-                @$this->resize_crop_image(400, 300, $pathImg, $thumbImg);
+                Storage::put('public/posts/' . $filename, $imgData);
 
                 $data['image'] = $filename;
 
@@ -242,71 +227,6 @@ class PostController extends Controller
         Session::flash('flash_message_success', 'Post deleted successfully.');
 
         return redirect()->route($this->routeIndex);
-    }
-
-    private function resize_crop_image($max_width, $max_height, $source_file, $dst_dir, $quality = 80): bool
-    {
-
-        try {
-
-            $imgsize = getimagesize($source_file);
-            $width  = $imgsize[0];
-            $height = $imgsize[1];
-            $mime   = $imgsize['mime'];
-
-            switch($mime){
-                case 'image/gif':
-                    $image_create = "imagecreatefromgif";
-                    $image = "imagegif";
-                    break;
-
-                case 'image/png':
-                    $image_create = "imagecreatefrompng";
-                    $image = "imagepng";
-                    $quality = 7;
-                    break;
-
-                case 'image/jpeg':
-                    $image_create = "imagecreatefromjpeg";
-                    $image = "imagejpeg";
-                    $quality = 80;
-                    break;
-
-                default:
-                    return false;
-                    break;
-            }
-
-            $dst_img = imagecreatetruecolor($max_width, $max_height);
-            $src_img = $image_create($source_file);
-
-            $width_new = $height * $max_width / $max_height;
-            $height_new = $width * $max_height / $max_width;
-            // if the new width is greater than the actual width of the image, then the height is too large and the rest cut off, or vice versa
-            if($width_new > $width){
-                // cut point by height
-                $h_point = (($height - $height_new) / 2);
-                // copy image
-                imagecopyresampled($dst_img, $src_img, 0, 0, 0, $h_point, $max_width, $max_height, $width, $height_new);
-            } else {
-                // cut point by width
-                $w_point = (($width - $width_new) / 2);
-                imagecopyresampled($dst_img, $src_img, 0, 0, $w_point, 0, $max_width, $max_height, $width_new, $height);
-            }
-
-            $image($dst_img, $dst_dir, $quality);
-
-            if($dst_img)imagedestroy($dst_img);
-            if($src_img)imagedestroy($src_img);
-
-            return true;
-
-        } catch (\Exception $e) {
-            // dd($e);
-        }
-
-        return false;
-
     }
 
 }
